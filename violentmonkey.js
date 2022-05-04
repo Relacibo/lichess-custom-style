@@ -8,6 +8,7 @@
 // @match        https://lichess.org/*
 // @grant        none
 // @inject-into content
+// @license MIT
 // ==/UserScript==
 
 (function () {
