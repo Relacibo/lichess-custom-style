@@ -1,0 +1,16 @@
+{
+  "name": "lichess-style",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "repository": "git@github.com:Relacibo/lichess-custom-style.git",
+  "author": "Reinhard Bronner <reinhard_bronner@t-online.de>",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "svg64": "^1.1.0"
+  },
+  "scripts": {
+    "convert-image": "node convert-image.js"
+  }
+}
