@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Relacibos Lichess userscript
-// @namespace    http://tampermonkey.net/
+// @namespace    Violentmonkey Scripts
 // @version      0.1
 // @description  My custom lichess UX/UI enhancements
 // @author       Relacibo
