@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Lichess Userscript
+// @name         Relacibos Lichess userscript
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  My custom lichess style
+// @description  My custom lichess UX/UI enhancements
 // @author       Relacibo
 // @match        https://www.lichess.org/*
 // @match        https://lichess.org/*
