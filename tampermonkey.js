@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Relacibos Lichess userscript
 // @namespace    Tampermonkey Scripts
-// @version      0.7
+// @version      0.8
 // @license MIT
 // @description  My custom lichess UX/UI enhancements
 // @author       Relacibo
@@ -34,13 +34,16 @@ body.relacibo-zen {
   margin: 0 !important;
 }
 
-/* Full-viewport centered layout */
+/* Full-viewport centered layout: use fixed to escape #main-wrap constraints */
 body.relacibo-zen main.round {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: 100vw !important;
-  height: 100vh !important;
   margin: 0 !important;
   padding: 0 !important;
 }
@@ -51,17 +54,18 @@ body.relacibo-zen .round__underboard {
   display: none !important;
 }
 
-/* Center the board app container */
-body.relacibo-zen .round__app {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+/* Override lichess inline styles for cg-container so our zoom applies */
+body.relacibo-zen cg-container {
+  width: var(---cg-width) !important;
+  height: var(---cg-height) !important;
 }
 
-/* Board color override for anarcandy set */
+/* Board color override for anarcandy set.
+   Simple 2×2 tile SVG (no <use> refs - those break in data: URLs) tiled at 25%×25% */
 body[data-piece-set="anarcandy"] cg-board {
-  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2aWV3Qm94PSIwIDAgOCA4IiBzaGFwZS1yZW5kZXJpbmc9ImNyaXNwRWRnZXMiPgogIDxnIGlkPSJhIj48ZyBpZD0iYiI+PGcgaWQ9ImMiPjxnIGlkPSJkIj4KICAgIDxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiM5Nzg5NzEiIGlkPSJlIi8+CiAgICA8dXNlIHg9IjEiIHk9IjEiIGhyZWY9IiNlIi8+CiAgICA8cmVjdCB5PSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiM1ZjRiM2EiIGlkPSJmIiB3aWR0aD0iMSIgeD0iMCIvPgogICAgPHVzZSB4PSIxIiB5PSItMSIgaHJlZj0iI2YiLz4KICA8L2c+PHVzZSB4PSIyIiBocmVmPSIjZCIvPjwvZz48dXNlIHg9IjQiIGhyZWY9IiNjIi8+PC9nPjx1c2UgeT0iMiIgaHJlZj0iI2IiLz48L2c+CiAgPHVzZSB5PSI0IiBocmVmPSIjYSIvPgo8L3N2Zz4=") !important;
-  background-size: 100% 100% !important;
+  background-color: #978971 !important;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyIDIiIHNoYXBlLXJlbmRlcmluZz0iY3Jpc3BFZGdlcyI+PHJlY3Qgd2lkdGg9IjIiIGhlaWdodD0iMiIgZmlsbD0iIzk3ODk3MSIvPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiM1ZjRiM2EiLz48cmVjdCB4PSIxIiB5PSIxIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjNWY0YjNhIi8+PC9zdmc+") !important;
+  background-size: 25% 25% !important;
 }
 
 /* Zen mode hint (bottom-left, fades out) */
@@ -101,6 +105,9 @@ body[data-piece-set="anarcandy"] cg-board {
     const desired = Math.min(window.innerHeight * 0.95, window.innerWidth * 0.97);
     const newZoom = (desired / BASE_BOARD_SIZE) * 100;
     document.body.style.setProperty("---zoom", newZoom.toFixed(2));
+    // Lichess sizes cg-container via ---cg-width/---cg-height, not ---zoom
+    document.body.style.setProperty("---cg-width", desired + "px");
+    document.body.style.setProperty("---cg-height", desired + "px");
   }
 
   function setZen(active) {
@@ -109,6 +116,8 @@ body[data-piece-set="anarcandy"] cg-board {
       updateBoardSize();
     } else {
       document.body.style.removeProperty("---zoom");
+      document.body.style.removeProperty("---cg-width");
+      document.body.style.removeProperty("---cg-height");
     }
   }
 
