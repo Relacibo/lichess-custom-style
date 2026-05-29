@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Relacibos Lichess userscript
 // @namespace    Tampermonkey Scripts
-// @version      0.20
+// @version      0.21
 // @license MIT
 // @description  My custom lichess UX/UI enhancements
 // @author       Relacibo
@@ -103,6 +103,13 @@ body[data-piece-set="anarcandy"] cg-board {
     const newSize = Math.round(boardW * zoomFactor);
 
     document.body.style.setProperty("---zoom", newZoom);
+
+    // Set board wrapper explicitly — its grid column doesn't auto-update with ---zoom
+    const boardEl = cgContainer.closest(".round__app__board");
+    if (boardEl) {
+      boardEl.style.width  = newSize + "px";
+      boardEl.style.height = newSize + "px";
+    }
     cgContainer.style.width  = newSize + "px";
     cgContainer.style.height = newSize + "px";
     if (cgWrap) {
@@ -132,10 +139,12 @@ body[data-piece-set="anarcandy"] cg-board {
 
       zenState = {
         origZoom, boardW, ctrlW,
-        cgW:   cgContainer.style.width,
-        cgH:   cgContainer.style.height,
-        wrapW: cgWrap ? cgWrap.style.width  : "",
-        wrapH: cgWrap ? cgWrap.style.height : "",
+        cgW:    cgContainer.style.width,
+        cgH:    cgContainer.style.height,
+        wrapW:  cgWrap ? cgWrap.style.width  : "",
+        wrapH:  cgWrap ? cgWrap.style.height : "",
+        boardElW: cgContainer.closest(".round__app__board")?.style.width  ?? "",
+        boardElH: cgContainer.closest(".round__app__board")?.style.height ?? "",
         cgContainer, cgWrap,
       };
 
@@ -147,6 +156,11 @@ body[data-piece-set="anarcandy"] cg-board {
       if (zenState) {
         const { origZoom, cgContainer, cgWrap } = zenState;
         document.body.style.setProperty("---zoom", origZoom);
+        const boardEl = cgContainer.closest(".round__app__board");
+        if (boardEl) {
+          boardEl.style.width  = zenState.boardElW;
+          boardEl.style.height = zenState.boardElH;
+        }
         cgContainer.style.width  = zenState.cgW;
         cgContainer.style.height = zenState.cgH;
         if (cgWrap) {
