@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Relacibos Lichess userscript
 // @namespace    Tampermonkey Scripts
-// @version      0.25
+// @version      0.26
 // @license MIT
 // @description  My custom lichess UX/UI enhancements
 // @author       Relacibo
@@ -20,8 +20,18 @@
 
 /* Zen mode: hide top bar and friend box */
 body.relacibo-zen #top,
+body.relacibo-zen #top::after,
+body.relacibo-zen #top::before,
+body.relacibo-zen .site__header,
 body.relacibo-zen #friend_box {
   display: none !important;
+}
+
+/* Hide any gradient/pseudo-elements that bleed in from the top */
+body.relacibo-zen #main-wrap::before,
+body.relacibo-zen #main-wrap::after {
+  display: none !important;
+  background: none !important;
 }
 
 /* Remove body top padding and main-wrap margin (Lichess uses margin-top on #main-wrap
