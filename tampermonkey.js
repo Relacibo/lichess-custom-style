@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Relacibos Lichess userscript
 // @namespace    Tampermonkey Scripts
-// @version      0.4
+// @version      0.5
 // @license MIT
 // @description  My custom lichess UX/UI enhancements
 // @author       Relacibo
@@ -41,6 +41,25 @@ body[data-piece-set="anarcandy"] .is2d cg-board {
   background-size: 12.5% 12.5% !important;
 }
 
+/* Zen mode hint (bottom-left, fades out) */
+#relacibo-zen-hint {
+  position: fixed;
+  bottom: 12px;
+  left: 12px;
+  background: rgba(0,0,0,0.6);
+  color: #ccc;
+  font-size: 12px;
+  padding: 5px 9px;
+  border-radius: 4px;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 1.5s ease;
+}
+#relacibo-zen-hint.hidden {
+  opacity: 0;
+}
+
 /* Rematch button locked state */
 .fbt.rematch.relacibo-locked {
   opacity: 0.4 !important;
@@ -74,6 +93,22 @@ body[data-piece-set="anarcandy"] .is2d cg-board {
 
   document.addEventListener("fullscreenchange", () => {
     setZen(!!document.fullscreenElement);
+  });
+
+  // Zen mode hint bottom-left
+  const hint = document.createElement("div");
+  hint.id = "relacibo-zen-hint";
+  hint.textContent = "F1 — Zen mode";
+  document.body.appendChild(hint);
+  setTimeout(() => hint.classList.add("hidden"), 3000);
+  hint.addEventListener("transitionend", () => hint.remove());
+
+  // F1 toggles zen mode
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "F1") {
+      e.preventDefault();
+      setZen(!document.body.classList.contains("relacibo-zen"));
+    }
   });
 
   window.addEventListener("resize", updateBoardSize);
