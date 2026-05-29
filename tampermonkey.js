@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Relacibos Lichess userscript
 // @namespace    Tampermonkey Scripts
-// @version      0.18
+// @version      0.19
 // @license MIT
 // @description  My custom lichess UX/UI enhancements
 // @author       Relacibo
@@ -33,6 +33,7 @@ body.relacibo-zen {
 
 body.relacibo-zen #main-wrap {
   margin-top: 0 !important;
+  padding-top: 8px !important;
 }
 
 /* Hide clocks in zen (empty grid rows causing spacing) */
@@ -89,6 +90,26 @@ body[data-piece-set="anarcandy"] cg-board {
 
   // Saved state for zen mode restore
   let zenState = null;
+  const ZEN_TOP_PAD = 8; // px of top padding kept in zen mode
+
+  function applyZenSizing(origZoom, boardW, ctrlW, cgContainer, cgWrap) {
+    const asideW = document.querySelector("aside.round__side")
+      ?.getBoundingClientRect().width ?? 0;
+    // Controls also scale proportionally with ---zoom, so account for both columns
+    const zoomFH = (window.innerHeight - ZEN_TOP_PAD) / boardW;
+    const zoomFW = (window.innerWidth  - asideW) / (boardW + ctrlW);
+    const zoomFactor = Math.min(zoomFH, zoomFW) * 0.97;
+    const newZoom = origZoom * zoomFactor;
+    const newSize = Math.round(boardW * zoomFactor);
+
+    document.body.style.setProperty("---zoom", newZoom);
+    cgContainer.style.width  = newSize + "px";
+    cgContainer.style.height = newSize + "px";
+    if (cgWrap) {
+      cgWrap.style.width  = newSize + "px";
+      cgWrap.style.height = newSize + "px";
+    }
+  }
 
   function setZen(active) {
     if (active) {
@@ -101,58 +122,33 @@ body[data-piece-set="anarcandy"] cg-board {
       const origZoom = parseFloat(
         getComputedStyle(document.body).getPropertyValue("---zoom").trim()
       ) || 100;
-
       const boardW = cgContainer.getBoundingClientRect().width;
-      const asideW = document.querySelector("aside.round__side")
-        ?.getBoundingClientRect().width ?? 0;
-
-      // Controls column: round__app width minus board cell width
-      let ctrlW = 240;
-      const roundApp = document.querySelector(".round__app");
-      const boardEl  = document.querySelector(".round__app__board");
-      if (roundApp && boardEl) {
-        const m = roundApp.getBoundingClientRect().width
-                - boardEl.getBoundingClientRect().width;
-        if (m > 50 && m < 600) ctrlW = m;
-      }
-
-      // Proportional zoom factor: scale everything up until board fills the
-      // smaller of (available height) or (available width)
-      const zoomRatioH = window.innerHeight / boardW;
-      const zoomRatioW = window.innerWidth  / (asideW + boardW + ctrlW);
-      const zoomFactor = Math.min(zoomRatioH, zoomRatioW) * 0.98;
-      const newZoom    = origZoom * zoomFactor;
-      const newSize    = Math.round(boardW * zoomFactor);
+      // Measure controls width as space between board right-edge and main.round right-edge
+      const mainRound = document.querySelector("main.round");
+      const ctrlW = mainRound
+        ? Math.max(50, mainRound.getBoundingClientRect().right
+                      - cgContainer.getBoundingClientRect().right)
+        : 240;
 
       zenState = {
-        origZoom,
+        origZoom, boardW, ctrlW,
         cgW:   cgContainer.style.width,
         cgH:   cgContainer.style.height,
         wrapW: cgWrap ? cgWrap.style.width  : "",
         wrapH: cgWrap ? cgWrap.style.height : "",
+        cgContainer, cgWrap,
       };
 
-      // ── Apply class, then update sizes ───────────────────────────────────
       document.body.classList.add("relacibo-zen");
-      document.body.style.setProperty("---zoom", newZoom);
-      cgContainer.style.width  = newSize + "px";
-      cgContainer.style.height = newSize + "px";
-      if (cgWrap) {
-        cgWrap.style.width  = newSize + "px";
-        cgWrap.style.height = newSize + "px";
-      }
+      applyZenSizing(origZoom, boardW, ctrlW, cgContainer, cgWrap);
 
     } else {
       document.body.classList.remove("relacibo-zen");
       if (zenState) {
-        const cgContainer = document.querySelector("cg-container");
-        const cgWrap = cgContainer?.parentElement?.classList.contains("cg-wrap")
-          ? cgContainer.parentElement : null;
-        document.body.style.setProperty("---zoom", zenState.origZoom);
-        if (cgContainer) {
-          cgContainer.style.width  = zenState.cgW;
-          cgContainer.style.height = zenState.cgH;
-        }
+        const { origZoom, cgContainer, cgWrap } = zenState;
+        document.body.style.setProperty("---zoom", origZoom);
+        cgContainer.style.width  = zenState.cgW;
+        cgContainer.style.height = zenState.cgH;
         if (cgWrap) {
           cgWrap.style.width  = zenState.wrapW;
           cgWrap.style.height = zenState.wrapH;
@@ -161,6 +157,17 @@ body[data-piece-set="anarcandy"] cg-board {
       }
     }
   }
+
+  // Re-apply zen sizing on window resize
+  let resizeTimer = null;
+  window.addEventListener("resize", () => {
+    if (!zenState) return;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      const { origZoom, boardW, ctrlW, cgContainer, cgWrap } = zenState;
+      applyZenSizing(origZoom, boardW, ctrlW, cgContainer, cgWrap);
+    }, 100);
+  });
 
   // F1 toggles zen mode
   document.addEventListener("keydown", (e) => {
