@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Relacibos Lichess userscript
 // @namespace    Tampermonkey Scripts
-// @version      0.19
+// @version      0.20
 // @license MIT
 // @description  My custom lichess UX/UI enhancements
 // @author       Relacibo
@@ -123,11 +123,11 @@ body[data-piece-set="anarcandy"] cg-board {
         getComputedStyle(document.body).getPropertyValue("---zoom").trim()
       ) || 100;
       const boardW = cgContainer.getBoundingClientRect().width;
-      // Measure controls width as space between board right-edge and main.round right-edge
-      const mainRound = document.querySelector("main.round");
-      const ctrlW = mainRound
-        ? Math.max(50, mainRound.getBoundingClientRect().right
-                      - cgContainer.getBoundingClientRect().right)
+      // .round__app is the direct flex container of board + controls (.round__app__table)
+      // Its width minus boardW gives the true controls column width
+      const roundApp = document.querySelector(".round__app");
+      const ctrlW = roundApp
+        ? Math.max(50, roundApp.getBoundingClientRect().width - boardW)
         : 240;
 
       zenState = {
