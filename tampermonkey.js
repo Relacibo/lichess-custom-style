@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Relacibos Lichess userscript
 // @namespace    Tampermonkey Scripts
-// @version      0.21
+// @version      0.22
 // @license MIT
 // @description  My custom lichess UX/UI enhancements
 // @author       Relacibo
@@ -92,81 +92,43 @@ body[data-piece-set="anarcandy"] cg-board {
   let zenState = null;
   const ZEN_TOP_PAD = 8; // px of top padding kept in zen mode
 
-  function applyZenSizing(origZoom, boardW, ctrlW, cgContainer, cgWrap) {
-    const asideW = document.querySelector("aside.round__side")
-      ?.getBoundingClientRect().width ?? 0;
-    // Controls also scale proportionally with ---zoom, so account for both columns
-    const zoomFH = (window.innerHeight - ZEN_TOP_PAD) / boardW;
-    const zoomFW = (window.innerWidth  - asideW) / (boardW + ctrlW);
+  function applyZenSizing(origZoom, boardW, ctrlW, asideW) {
+    // ctrlW and asideW are FIXED widths — they do NOT scale with ---zoom
+    // (confirmed via Playwright: ctrl stays at ~415px across zoom levels)
+    const zoomFW = (window.innerWidth  - asideW - ctrlW) / boardW;
+    const zoomFH = (window.innerHeight - ZEN_TOP_PAD)    / boardW;
     const zoomFactor = Math.min(zoomFH, zoomFW) * 0.97;
-    const newZoom = origZoom * zoomFactor;
-    const newSize = Math.round(boardW * zoomFactor);
-
-    document.body.style.setProperty("---zoom", newZoom);
-
-    // Set board wrapper explicitly — its grid column doesn't auto-update with ---zoom
-    const boardEl = cgContainer.closest(".round__app__board");
-    if (boardEl) {
-      boardEl.style.width  = newSize + "px";
-      boardEl.style.height = newSize + "px";
-    }
-    cgContainer.style.width  = newSize + "px";
-    cgContainer.style.height = newSize + "px";
-    if (cgWrap) {
-      cgWrap.style.width  = newSize + "px";
-      cgWrap.style.height = newSize + "px";
-    }
+    // Only set ---zoom — Lichess's own CSS/JS will resize all child elements
+    document.body.style.setProperty("---zoom", origZoom * zoomFactor);
   }
 
   function setZen(active) {
     if (active) {
       const cgContainer = document.querySelector("cg-container");
       if (!cgContainer) return;
-      const cgWrap = cgContainer.parentElement?.classList.contains("cg-wrap")
-        ? cgContainer.parentElement : null;
 
       // ── Measure BEFORE touching the DOM ──────────────────────────────────
       const origZoom = parseFloat(
         getComputedStyle(document.body).getPropertyValue("---zoom").trim()
       ) || 100;
       const boardW = cgContainer.getBoundingClientRect().width;
-      // .round__app is the direct flex container of board + controls (.round__app__table)
-      // Its width minus boardW gives the true controls column width
       const roundApp = document.querySelector(".round__app");
+      const asideEl  = document.querySelector("aside.round__side");
+      const asideW   = asideEl?.getBoundingClientRect().width ?? 0;
+      // ctrlW = roundApp width minus board column (both are fixed, independent of zoom)
       const ctrlW = roundApp
         ? Math.max(50, roundApp.getBoundingClientRect().width - boardW)
         : 240;
 
-      zenState = {
-        origZoom, boardW, ctrlW,
-        cgW:    cgContainer.style.width,
-        cgH:    cgContainer.style.height,
-        wrapW:  cgWrap ? cgWrap.style.width  : "",
-        wrapH:  cgWrap ? cgWrap.style.height : "",
-        boardElW: cgContainer.closest(".round__app__board")?.style.width  ?? "",
-        boardElH: cgContainer.closest(".round__app__board")?.style.height ?? "",
-        cgContainer, cgWrap,
-      };
+      zenState = { origZoom, boardW, ctrlW, asideW };
 
       document.body.classList.add("relacibo-zen");
-      applyZenSizing(origZoom, boardW, ctrlW, cgContainer, cgWrap);
+      applyZenSizing(origZoom, boardW, ctrlW, asideW);
 
     } else {
       document.body.classList.remove("relacibo-zen");
       if (zenState) {
-        const { origZoom, cgContainer, cgWrap } = zenState;
-        document.body.style.setProperty("---zoom", origZoom);
-        const boardEl = cgContainer.closest(".round__app__board");
-        if (boardEl) {
-          boardEl.style.width  = zenState.boardElW;
-          boardEl.style.height = zenState.boardElH;
-        }
-        cgContainer.style.width  = zenState.cgW;
-        cgContainer.style.height = zenState.cgH;
-        if (cgWrap) {
-          cgWrap.style.width  = zenState.wrapW;
-          cgWrap.style.height = zenState.wrapH;
-        }
+        document.body.style.setProperty("---zoom", zenState.origZoom);
         zenState = null;
       }
     }
@@ -178,8 +140,8 @@ body[data-piece-set="anarcandy"] cg-board {
     if (!zenState) return;
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
-      const { origZoom, boardW, ctrlW, cgContainer, cgWrap } = zenState;
-      applyZenSizing(origZoom, boardW, ctrlW, cgContainer, cgWrap);
+      const { origZoom, boardW, ctrlW, asideW } = zenState;
+      applyZenSizing(origZoom, boardW, ctrlW, asideW);
     }, 100);
   });
 
