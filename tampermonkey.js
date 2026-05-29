@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Relacibos Lichess userscript
 // @namespace    Tampermonkey Scripts
-// @version      0.17
+// @version      0.18
 // @license MIT
 // @description  My custom lichess UX/UI enhancements
 // @author       Relacibo
@@ -24,41 +24,20 @@ body.relacibo-zen #friend_box {
   display: none !important;
 }
 
-/* Remove body padding for header */
+/* Remove body top padding and main-wrap margin (Lichess uses margin-top on #main-wrap
+   to account for the fixed nav bar — we zero it in zen since nav bar is hidden) */
 body.relacibo-zen {
   overflow: hidden !important;
   padding-top: 0 !important;
 }
 
-/* Full-viewport layout — board starts flush at top */
 body.relacibo-zen #main-wrap {
-  position: fixed !important;
-  inset: 0 !important;
-  display: flex !important;
-  align-items: flex-start !important;
-  justify-content: center !important;
-  overflow: hidden !important;
+  margin-top: 0 !important;
 }
 
-/* Keep main.round as a natural flex row */
-body.relacibo-zen main.round {
-  position: static !important;
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: flex-start !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-/* Hide clocks (empty for correspondence, cause top-row spacing) */
+/* Hide clocks in zen (empty grid rows causing spacing) */
 body.relacibo-zen .rclock {
   display: none !important;
-}
-
-/* Remove round__app internal grid gap/padding */
-body.relacibo-zen .round__app {
-  padding: 0 !important;
-  gap: 0 !important;
 }
 
 /* Hide underboard and underchat in zen mode */
@@ -109,70 +88,77 @@ body[data-piece-set="anarcandy"] cg-board {
   GM_addStyle(css);
 
   // Saved state for zen mode restore
-  let origZoom = null;
-  let origCgInline = null;
+  let zenState = null;
 
   function setZen(active) {
-    document.body.classList.toggle("relacibo-zen", active);
+    if (active) {
+      const cgContainer = document.querySelector("cg-container");
+      if (!cgContainer) return;
+      const cgWrap = cgContainer.parentElement?.classList.contains("cg-wrap")
+        ? cgContainer.parentElement : null;
 
-    const cgContainer = document.querySelector("cg-container");
-    const cgWrap = cgContainer ? cgContainer.parentElement : null;
+      // ── Measure BEFORE touching the DOM ──────────────────────────────────
+      const origZoom = parseFloat(
+        getComputedStyle(document.body).getPropertyValue("---zoom").trim()
+      ) || 100;
 
-    if (active && cgContainer) {
-      // Save current values
-      origZoom = document.body.style.getPropertyValue("---zoom");
-      origCgInline = {
-        w: cgContainer.style.width,
-        h: cgContainer.style.height,
-        ww: cgWrap ? cgWrap.style.width : "",
-        wh: cgWrap ? cgWrap.style.height : "",
+      const boardW = cgContainer.getBoundingClientRect().width;
+      const asideW = document.querySelector("aside.round__side")
+        ?.getBoundingClientRect().width ?? 0;
+
+      // Controls column: round__app width minus board cell width
+      let ctrlW = 240;
+      const roundApp = document.querySelector(".round__app");
+      const boardEl  = document.querySelector(".round__app__board");
+      if (roundApp && boardEl) {
+        const m = roundApp.getBoundingClientRect().width
+                - boardEl.getBoundingClientRect().width;
+        if (m > 50 && m < 600) ctrlW = m;
+      }
+
+      // Proportional zoom factor: scale everything up until board fills the
+      // smaller of (available height) or (available width)
+      const zoomRatioH = window.innerHeight / boardW;
+      const zoomRatioW = window.innerWidth  / (asideW + boardW + ctrlW);
+      const zoomFactor = Math.min(zoomRatioH, zoomRatioW) * 0.98;
+      const newZoom    = origZoom * zoomFactor;
+      const newSize    = Math.round(boardW * zoomFactor);
+
+      zenState = {
+        origZoom,
+        cgW:   cgContainer.style.width,
+        cgH:   cgContainer.style.height,
+        wrapW: cgWrap ? cgWrap.style.width  : "",
+        wrapH: cgWrap ? cgWrap.style.height : "",
       };
 
-      // Calculate zoom ratio (px per zoom unit)
-      const currentZoom = parseFloat(origZoom) || 100;
-      const K = cgContainer.getBoundingClientRect().width / currentZoom;
-
-      // Measure aside width; estimate controls column width from round__app
-      const aside = document.querySelector("aside.round__side");
-      const roundApp = document.querySelector(".round__app");
-      const boardEl = document.querySelector(".round__app__board");
-      const asideW = aside ? aside.getBoundingClientRect().width : 0;
-      let ctrlW = 240;
-      if (roundApp && boardEl) {
-        const measured = roundApp.getBoundingClientRect().width
-          - boardEl.getBoundingClientRect().width;
-        if (measured > 50 && measured < 500) ctrlW = measured;
+      // ── Apply class, then update sizes ───────────────────────────────────
+      document.body.classList.add("relacibo-zen");
+      document.body.style.setProperty("---zoom", newZoom);
+      cgContainer.style.width  = newSize + "px";
+      cgContainer.style.height = newSize + "px";
+      if (cgWrap) {
+        cgWrap.style.width  = newSize + "px";
+        cgWrap.style.height = newSize + "px";
       }
 
-      const size = Math.floor(Math.min(
-        window.innerWidth - asideW - ctrlW,
-        window.innerHeight
-      ));
-
-      // Update ---zoom so Lichess grid repositions controls correctly
-      document.body.style.setProperty("---zoom", size / K);
-
-      // Update inline sizes (Lichess sets these via JS, !important CSS would block)
-      cgContainer.style.width  = size + "px";
-      cgContainer.style.height = size + "px";
-      if (cgWrap && cgWrap.classList.contains("cg-wrap")) {
-        cgWrap.style.width  = size + "px";
-        cgWrap.style.height = size + "px";
-      }
-
-    } else if (!active && origZoom !== null) {
-      // Restore everything
-      document.body.style.setProperty("---zoom", origZoom);
-      if (cgContainer && origCgInline) {
-        cgContainer.style.width  = origCgInline.w;
-        cgContainer.style.height = origCgInline.h;
-        if (cgWrap && cgWrap.classList.contains("cg-wrap")) {
-          cgWrap.style.width  = origCgInline.ww;
-          cgWrap.style.height = origCgInline.wh;
+    } else {
+      document.body.classList.remove("relacibo-zen");
+      if (zenState) {
+        const cgContainer = document.querySelector("cg-container");
+        const cgWrap = cgContainer?.parentElement?.classList.contains("cg-wrap")
+          ? cgContainer.parentElement : null;
+        document.body.style.setProperty("---zoom", zenState.origZoom);
+        if (cgContainer) {
+          cgContainer.style.width  = zenState.cgW;
+          cgContainer.style.height = zenState.cgH;
         }
+        if (cgWrap) {
+          cgWrap.style.width  = zenState.wrapW;
+          cgWrap.style.height = zenState.wrapH;
+        }
+        zenState = null;
       }
-      origZoom = null;
-      origCgInline = null;
     }
   }
 
