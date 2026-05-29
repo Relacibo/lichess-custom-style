@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Relacibos Lichess userscript
 // @namespace    Tampermonkey Scripts
-// @version      0.16
+// @version      0.17
 // @license MIT
 // @description  My custom lichess UX/UI enhancements
 // @author       Relacibo
@@ -18,10 +18,9 @@
   display: none;
 }
 
-/* Zen mode: hide top bar, friend box and left sidebar */
+/* Zen mode: hide top bar and friend box */
 body.relacibo-zen #top,
-body.relacibo-zen #friend_box,
-body.relacibo-zen aside.round__side {
+body.relacibo-zen #friend_box {
   display: none !important;
 }
 
@@ -31,7 +30,7 @@ body.relacibo-zen {
   padding-top: 0 !important;
 }
 
-/* Full-viewport layout via #main-wrap — top-aligned to avoid bottom cutoff */
+/* Full-viewport layout — board starts flush at top */
 body.relacibo-zen #main-wrap {
   position: fixed !important;
   inset: 0 !important;
@@ -41,7 +40,7 @@ body.relacibo-zen #main-wrap {
   overflow: hidden !important;
 }
 
-/* Keep main.round in natural row layout, centered inside #main-wrap */
+/* Keep main.round as a natural flex row */
 body.relacibo-zen main.round {
   position: static !important;
   display: flex !important;
@@ -51,17 +50,21 @@ body.relacibo-zen main.round {
   padding: 0 !important;
 }
 
+/* Hide clocks (empty for correspondence, cause top-row spacing) */
+body.relacibo-zen .rclock {
+  display: none !important;
+}
+
+/* Remove round__app internal grid gap/padding */
+body.relacibo-zen .round__app {
+  padding: 0 !important;
+  gap: 0 !important;
+}
+
 /* Hide underboard and underchat in zen mode */
 body.relacibo-zen .round__underboard,
 body.relacibo-zen .round__underchat {
   display: none !important;
-}
-
-/* Size board directly (overrides Lichess inline style via !important) */
-body.relacibo-zen cg-container,
-body.relacibo-zen .cg-wrap {
-  width: min(95vh, 97vw) !important;
-  height: min(95vh, 97vw) !important;
 }
 
 /* Lichess sets board image via cg-board::before — clear it for anarcandy */
@@ -105,8 +108,72 @@ body[data-piece-set="anarcandy"] cg-board {
 
   GM_addStyle(css);
 
+  // Saved state for zen mode restore
+  let origZoom = null;
+  let origCgInline = null;
+
   function setZen(active) {
     document.body.classList.toggle("relacibo-zen", active);
+
+    const cgContainer = document.querySelector("cg-container");
+    const cgWrap = cgContainer ? cgContainer.parentElement : null;
+
+    if (active && cgContainer) {
+      // Save current values
+      origZoom = document.body.style.getPropertyValue("---zoom");
+      origCgInline = {
+        w: cgContainer.style.width,
+        h: cgContainer.style.height,
+        ww: cgWrap ? cgWrap.style.width : "",
+        wh: cgWrap ? cgWrap.style.height : "",
+      };
+
+      // Calculate zoom ratio (px per zoom unit)
+      const currentZoom = parseFloat(origZoom) || 100;
+      const K = cgContainer.getBoundingClientRect().width / currentZoom;
+
+      // Measure aside width; estimate controls column width from round__app
+      const aside = document.querySelector("aside.round__side");
+      const roundApp = document.querySelector(".round__app");
+      const boardEl = document.querySelector(".round__app__board");
+      const asideW = aside ? aside.getBoundingClientRect().width : 0;
+      let ctrlW = 240;
+      if (roundApp && boardEl) {
+        const measured = roundApp.getBoundingClientRect().width
+          - boardEl.getBoundingClientRect().width;
+        if (measured > 50 && measured < 500) ctrlW = measured;
+      }
+
+      const size = Math.floor(Math.min(
+        window.innerWidth - asideW - ctrlW,
+        window.innerHeight
+      ));
+
+      // Update ---zoom so Lichess grid repositions controls correctly
+      document.body.style.setProperty("---zoom", size / K);
+
+      // Update inline sizes (Lichess sets these via JS, !important CSS would block)
+      cgContainer.style.width  = size + "px";
+      cgContainer.style.height = size + "px";
+      if (cgWrap && cgWrap.classList.contains("cg-wrap")) {
+        cgWrap.style.width  = size + "px";
+        cgWrap.style.height = size + "px";
+      }
+
+    } else if (!active && origZoom !== null) {
+      // Restore everything
+      document.body.style.setProperty("---zoom", origZoom);
+      if (cgContainer && origCgInline) {
+        cgContainer.style.width  = origCgInline.w;
+        cgContainer.style.height = origCgInline.h;
+        if (cgWrap && cgWrap.classList.contains("cg-wrap")) {
+          cgWrap.style.width  = origCgInline.ww;
+          cgWrap.style.height = origCgInline.wh;
+        }
+      }
+      origZoom = null;
+      origCgInline = null;
+    }
   }
 
   // F1 toggles zen mode
