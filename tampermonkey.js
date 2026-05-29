@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Relacibos Lichess userscript
 // @namespace    Tampermonkey Scripts
-// @version      0.24
+// @version      0.25
 // @license MIT
 // @description  My custom lichess UX/UI enhancements
 // @author       Relacibo
@@ -41,9 +41,9 @@ body.relacibo-zen #main-wrap {
 }
 
 /* Hide clocks in zen (empty grid rows causing spacing) */
-body.relacibo-zen .rclock {
+/* body.relacibo-zen .rclock {
   display: none !important;
-}
+} */
 
 /* Hide underboard and underchat in zen mode */
 body.relacibo-zen .round__underboard,
