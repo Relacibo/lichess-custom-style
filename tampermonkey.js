@@ -27,11 +27,8 @@ body.relacibo-zen #friend_box {
   display: none !important;
 }
 
-/* Hide any gradient/pseudo-elements that bleed in from the top */
-body.relacibo-zen #main-wrap::before,
-body.relacibo-zen #main-wrap::after {
-  display: none !important;
-  background: none !important;
+body.relacibo-zen {
+  --c-body-gradient: none !important;
 }
 
 /* Remove body top padding and main-wrap margin (Lichess uses margin-top on #main-wrap
