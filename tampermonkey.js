@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Relacibos Lichess userscript
 // @namespace    Tampermonkey Scripts
-// @version      0.26
+// @version      0.27
 // @license MIT
 // @description  My custom lichess UX/UI enhancements
 // @author       Relacibo
@@ -106,8 +106,8 @@ body[data-piece-set="anarcandy"] cg-board {
   function applyZenSizing(origZoom, boardW, ctrlW, asideW) {
     // ctrlW and asideW are FIXED widths — they do NOT scale with ---zoom
     // (confirmed via Playwright: ctrl stays at ~415px across zoom levels)
-    const zoomFW = (window.innerWidth  - asideW - ctrlW) / boardW;
-    const zoomFH = (window.innerHeight - ZEN_TOP_PAD)    / boardW;
+    const zoomFW = (window.innerWidth - asideW - ctrlW) / boardW;
+    const zoomFH = (window.innerHeight - ZEN_TOP_PAD) / boardW;
     const zoomFactor = Math.min(zoomFH, zoomFW) * 0.97;
     // Only set ---zoom — Lichess's own CSS/JS will resize all child elements
     document.body.style.setProperty("---zoom", origZoom * zoomFactor);
@@ -126,8 +126,8 @@ body[data-piece-set="anarcandy"] cg-board {
       ) || 100;
       const boardW = cgContainer.getBoundingClientRect().width;
       const roundApp = document.querySelector(".round__app");
-      const asideEl  = document.querySelector("aside.round__side");
-      const asideW   = asideEl?.getBoundingClientRect().width ?? 0;
+      const asideEl = document.querySelector("aside.round__side");
+      const asideW = asideEl?.getBoundingClientRect().width ?? 0;
       // ctrlW = roundApp width minus board column (both are fixed, independent of zoom)
       const ctrlW = roundApp
         ? Math.max(50, roundApp.getBoundingClientRect().width - boardW)
