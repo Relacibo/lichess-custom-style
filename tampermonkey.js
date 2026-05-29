@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Relacibos Lichess userscript
 // @namespace    Tampermonkey Scripts
-// @version      0.22
+// @version      0.23
 // @license MIT
 // @description  My custom lichess UX/UI enhancements
 // @author       Relacibo
@@ -108,8 +108,10 @@ body[data-piece-set="anarcandy"] cg-board {
       if (!cgContainer) return;
 
       // ── Measure BEFORE touching the DOM ──────────────────────────────────
+      // Save the raw inline value (may be "" if ---zoom is only in CSS)
+      const origZoomInline = document.body.style.getPropertyValue("---zoom");
       const origZoom = parseFloat(
-        getComputedStyle(document.body).getPropertyValue("---zoom").trim()
+        origZoomInline || getComputedStyle(document.body).getPropertyValue("---zoom")
       ) || 100;
       const boardW = cgContainer.getBoundingClientRect().width;
       const roundApp = document.querySelector(".round__app");
@@ -120,7 +122,7 @@ body[data-piece-set="anarcandy"] cg-board {
         ? Math.max(50, roundApp.getBoundingClientRect().width - boardW)
         : 240;
 
-      zenState = { origZoom, boardW, ctrlW, asideW };
+      zenState = { origZoom, origZoomInline, boardW, ctrlW, asideW };
 
       document.body.classList.add("relacibo-zen");
       applyZenSizing(origZoom, boardW, ctrlW, asideW);
@@ -128,7 +130,12 @@ body[data-piece-set="anarcandy"] cg-board {
     } else {
       document.body.classList.remove("relacibo-zen");
       if (zenState) {
-        document.body.style.setProperty("---zoom", zenState.origZoom);
+        // Restore exactly: remove inline if it wasn't there before, else set back
+        if (zenState.origZoomInline !== "") {
+          document.body.style.setProperty("---zoom", zenState.origZoomInline);
+        } else {
+          document.body.style.removeProperty("---zoom");
+        }
         zenState = null;
       }
     }
