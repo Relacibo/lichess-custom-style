@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Relacibos Lichess userscript
 // @namespace    Tampermonkey Scripts
-// @version      0.5
+// @version      0.7
 // @license MIT
 // @description  My custom lichess UX/UI enhancements
 // @author       Relacibo
@@ -59,9 +59,9 @@ body.relacibo-zen .round__app {
 }
 
 /* Board color override for anarcandy set */
-body[data-piece-set="anarcandy"] .is2d cg-board {
+body[data-piece-set="anarcandy"] cg-board {
   background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2aWV3Qm94PSIwIDAgOCA4IiBzaGFwZS1yZW5kZXJpbmc9ImNyaXNwRWRnZXMiPgogIDxnIGlkPSJhIj48ZyBpZD0iYiI+PGcgaWQ9ImMiPjxnIGlkPSJkIj4KICAgIDxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiM5Nzg5NzEiIGlkPSJlIi8+CiAgICA8dXNlIHg9IjEiIHk9IjEiIGhyZWY9IiNlIi8+CiAgICA8cmVjdCB5PSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiM1ZjRiM2EiIGlkPSJmIiB3aWR0aD0iMSIgeD0iMCIvPgogICAgPHVzZSB4PSIxIiB5PSItMSIgaHJlZj0iI2YiLz4KICA8L2c+PHVzZSB4PSIyIiBocmVmPSIjZCIvPjwvZz48dXNlIHg9IjQiIGhyZWY9IiNjIi8+PC9nPjx1c2UgeT0iMiIgaHJlZj0iI2IiLz48L2c+CiAgPHVzZSB5PSI0IiBocmVmPSIjYSIvPgo8L3N2Zz4=") !important;
-  background-size: 12.5% 12.5% !important;
+  background-size: 100% 100% !important;
 }
 
 /* Zen mode hint (bottom-left, fades out) */
