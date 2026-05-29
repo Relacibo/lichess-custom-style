@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Relacibos Lichess userscript
 // @namespace    Tampermonkey Scripts
-// @version      0.9
+// @version      0.10
 // @license MIT
 // @description  My custom lichess UX/UI enhancements
 // @author       Relacibo
@@ -19,48 +19,57 @@
 }
 
 /* Zen mode: hide top bar and friend box */
-body.relacibo-zen #top {
-  display: none !important;
-}
-
+body.relacibo-zen #top,
 body.relacibo-zen #friend_box {
   display: none !important;
 }
 
-/* Remove body padding/margin that compensates for #top */
+/* Remove body padding for header */
 body.relacibo-zen {
   overflow: hidden !important;
-  padding: 0 !important;
-  margin: 0 !important;
+  padding-top: 0 !important;
 }
 
-/* Full-viewport centered layout */
-body.relacibo-zen main.round {
+/* Full-viewport centered layout via #main-wrap */
+body.relacibo-zen #main-wrap {
   position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
+  inset: 0 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  overflow: hidden !important;
+}
+
+/* Keep main.round in natural row layout, centered inside #main-wrap */
+body.relacibo-zen main.round {
+  position: static !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
   margin: 0 !important;
   padding: 0 !important;
 }
 
-/* Hide underboard in zen mode but keep aside (left panel) */
-body.relacibo-zen .round__underboard {
+/* Hide underboard and underchat in zen mode */
+body.relacibo-zen .round__underboard,
+body.relacibo-zen .round__underchat {
   display: none !important;
 }
 
-/* Size board directly so we don't have to touch ---cg-width/---cg-height vars */
+/* Size board directly (overrides Lichess inline style via !important) */
 body.relacibo-zen cg-container,
 body.relacibo-zen .cg-wrap {
   width: min(95vh, 97vw) !important;
   height: min(95vh, 97vw) !important;
 }
 
-/* Board color override for anarcandy set (CSS gradient - no external resource) */
+/* Lichess sets board image via cg-board::before — clear it for anarcandy */
+body[data-piece-set="anarcandy"].is2d cg-board::before,
+body[data-piece-set="anarcandy"] .is2d cg-board::before {
+  background-image: none !important;
+}
+
+/* Custom board color for anarcandy (replaces default purple-diag board) */
 body[data-piece-set="anarcandy"] cg-board {
   background-image: repeating-conic-gradient(#5f4b3a 0% 25%, #978971 0% 50%) !important;
   background-size: 12.5% 12.5% !important;
@@ -95,38 +104,9 @@ body[data-piece-set="anarcandy"] cg-board {
 
   GM_addStyle(css);
 
-  // Board size: set ---zoom so board = min(95vh, 97vw)
-  const BASE_BOARD_SIZE = 1024; // px at zoom=100
-
-  function updateBoardSize() {
-    if (!document.body.classList.contains("relacibo-zen")) return;
-    const desired = Math.min(window.innerHeight * 0.95, window.innerWidth * 0.97);
-    const newZoom = (desired / BASE_BOARD_SIZE) * 100;
-    document.body.style.setProperty("---zoom", newZoom.toFixed(2));
-    // Note: cg-container size is handled directly via CSS (min(95vh, 97vw))
-    // so we don't touch ---cg-width/---cg-height to avoid clobbering Lichess's values
-  }
-
   function setZen(active) {
     document.body.classList.toggle("relacibo-zen", active);
-    if (active) {
-      updateBoardSize();
-    } else {
-      document.body.style.removeProperty("---zoom");
-    }
   }
-
-  document.addEventListener("fullscreenchange", () => {
-    setZen(!!document.fullscreenElement);
-  });
-
-  // Zen mode hint bottom-left
-  const hint = document.createElement("div");
-  hint.id = "relacibo-zen-hint";
-  hint.textContent = "F1 — Zen mode";
-  document.body.appendChild(hint);
-  setTimeout(() => hint.classList.add("hidden"), 3000);
-  hint.addEventListener("transitionend", () => hint.remove());
 
   // F1 toggles zen mode
   document.addEventListener("keydown", (e) => {
@@ -136,7 +116,13 @@ body[data-piece-set="anarcandy"] cg-board {
     }
   });
 
-  window.addEventListener("resize", updateBoardSize);
+  // Zen mode hint bottom-left
+  const hint = document.createElement("div");
+  hint.id = "relacibo-zen-hint";
+  hint.textContent = "F1 — Zen mode";
+  document.body.appendChild(hint);
+  setTimeout(() => hint.classList.add("hidden"), 3000);
+  hint.addEventListener("transitionend", () => hint.remove());
 
   // Anarcandy bishop texture (only when anarcandy set is active)
   function addAnarcandyStyle() {
