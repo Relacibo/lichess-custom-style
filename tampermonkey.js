@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Relacibos Lichess userscript
 // @namespace    Tampermonkey Scripts
-// @version      0.13
+// @version      0.14
 // @license MIT
 // @description  My custom lichess UX/UI enhancements
 // @author       Relacibo
@@ -71,7 +71,7 @@ body[data-piece-set="anarcandy"] .is2d cg-board::before {
 
 /* Custom board color for anarcandy (replaces default purple-diag board) */
 body[data-piece-set="anarcandy"] cg-board {
-  background-image: repeating-conic-gradient(#4d5f98 0% 25%, #df919e 0% 50%) !important;
+  background-image: repeating-conic-gradient(#44568e 0% 25%, #df919e 0% 50%) !important;
   background-size: 25% 25% !important;
 }
 
