@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Relacibos Lichess userscript
+// @name         Relacibos Lichess userscript (DEPRECATED)
 // @namespace    Violentmonkey Scripts
-// @version      0.2
-// @description  My custom lichess UX/UI enhancements
+// @version      0.3
+// @description  ⚠️ DEPRECATED — Please use the new version: https://greasyfork.org/de/scripts/580275-relacibos-lichess-userscript
 // @author       Relacibo
 // @match        https://www.lichess.org/*
 // @match        https://lichess.org/*
@@ -12,6 +12,10 @@
 // @downloadURL https://update.greasyfork.org/scripts/444449/Relacibos%20Lichess%20userscript.user.js
 // @updateURL https://update.greasyfork.org/scripts/444449/Relacibos%20Lichess%20userscript.meta.js
 // ==/UserScript==
+
+// ⚠️ This script is deprecated.
+// Please use the updated version on Greasyfork:
+// https://greasyfork.org/de/scripts/580275-relacibos-lichess-userscript
 
 (function() {
   "use strict";
