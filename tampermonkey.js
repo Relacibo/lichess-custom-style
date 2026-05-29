@@ -18,17 +18,17 @@
   display: none;
 }
 
-/* Zen mode: auto-hide top bar and friend box during game */
-body.playing #top {
+/* Zen mode: hide top bar and friend box in fullscreen */
+body.relacibo-zen #top {
   display: none !important;
 }
 
-body.playing #friend_box {
+body.relacibo-zen #friend_box {
   display: none !important;
 }
 
-/* Center board layout during game */
-body.playing main.round {
+/* Center board layout in fullscreen */
+body.relacibo-zen main.round {
   min-height: 100vh;
   display: flex !important;
   align-items: center;
@@ -57,11 +57,24 @@ body[data-piece-set="anarcandy"] .is2d cg-board {
   const BASE_BOARD_SIZE = 1024; // px at zoom=100
 
   function updateBoardSize() {
-    if (!document.body.classList.contains("playing")) return;
+    if (!document.body.classList.contains("relacibo-zen")) return;
     const desired = Math.min(window.innerHeight * 0.95, window.innerWidth * 0.97);
     const newZoom = (desired / BASE_BOARD_SIZE) * 100;
     document.body.style.setProperty("---zoom", newZoom.toFixed(2));
   }
+
+  function setZen(active) {
+    document.body.classList.toggle("relacibo-zen", active);
+    if (active) {
+      updateBoardSize();
+    } else {
+      document.body.style.removeProperty("---zoom");
+    }
+  }
+
+  document.addEventListener("fullscreenchange", () => {
+    setZen(!!document.fullscreenElement);
+  });
 
   window.addEventListener("resize", updateBoardSize);
 
