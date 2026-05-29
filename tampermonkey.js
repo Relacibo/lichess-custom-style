@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Relacibos Lichess userscript
 // @namespace    Tampermonkey Scripts
-// @version      0.14
+// @version      0.15
 // @license MIT
 // @description  My custom lichess UX/UI enhancements
 // @author       Relacibo
@@ -18,9 +18,10 @@
   display: none;
 }
 
-/* Zen mode: hide top bar and friend box */
+/* Zen mode: hide top bar, friend box and left sidebar */
 body.relacibo-zen #top,
-body.relacibo-zen #friend_box {
+body.relacibo-zen #friend_box,
+body.relacibo-zen aside.round__side {
   display: none !important;
 }
 
@@ -30,12 +31,12 @@ body.relacibo-zen {
   padding-top: 0 !important;
 }
 
-/* Full-viewport centered layout via #main-wrap */
+/* Full-viewport layout via #main-wrap — top-aligned to avoid bottom cutoff */
 body.relacibo-zen #main-wrap {
   position: fixed !important;
   inset: 0 !important;
   display: flex !important;
-  align-items: center !important;
+  align-items: flex-start !important;
   justify-content: center !important;
   overflow: hidden !important;
 }
@@ -45,7 +46,7 @@ body.relacibo-zen main.round {
   position: static !important;
   display: flex !important;
   flex-direction: row !important;
-  align-items: center !important;
+  align-items: flex-start !important;
   margin: 0 !important;
   padding: 0 !important;
 }
