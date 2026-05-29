@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Relacibos Lichess userscript
 // @namespace    Tampermonkey Scripts
-// @version      0.23
+// @version      0.24
 // @license MIT
 // @description  My custom lichess UX/UI enhancements
 // @author       Relacibo
@@ -33,7 +33,11 @@ body.relacibo-zen {
 
 body.relacibo-zen #main-wrap {
   margin-top: 0 !important;
-  padding-top: 8px !important;
+  padding-top: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 100vh !important;
 }
 
 /* Hide clocks in zen (empty grid rows causing spacing) */
@@ -90,7 +94,7 @@ body[data-piece-set="anarcandy"] cg-board {
 
   // Saved state for zen mode restore
   let zenState = null;
-  const ZEN_TOP_PAD = 8; // px of top padding kept in zen mode
+  const ZEN_TOP_PAD = 0; // vertical centering handled via CSS flex on #main-wrap
 
   function applyZenSizing(origZoom, boardW, ctrlW, asideW) {
     // ctrlW and asideW are FIXED widths — they do NOT scale with ---zoom
