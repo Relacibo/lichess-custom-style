@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Relacibos Lichess userscript
 // @namespace    Tampermonkey Scripts
-// @version      0.8
+// @version      0.9
 // @license MIT
 // @description  My custom lichess UX/UI enhancements
 // @author       Relacibo
@@ -34,7 +34,7 @@ body.relacibo-zen {
   margin: 0 !important;
 }
 
-/* Full-viewport centered layout: use fixed to escape #main-wrap constraints */
+/* Full-viewport centered layout */
 body.relacibo-zen main.round {
   position: fixed !important;
   top: 0 !important;
@@ -48,24 +48,22 @@ body.relacibo-zen main.round {
   padding: 0 !important;
 }
 
-/* Hide side panel and underboard in zen mode */
-body.relacibo-zen aside.round__side,
+/* Hide underboard in zen mode but keep aside (left panel) */
 body.relacibo-zen .round__underboard {
   display: none !important;
 }
 
-/* Override lichess inline styles for cg-container so our zoom applies */
-body.relacibo-zen cg-container {
-  width: var(---cg-width) !important;
-  height: var(---cg-height) !important;
+/* Size board directly so we don't have to touch ---cg-width/---cg-height vars */
+body.relacibo-zen cg-container,
+body.relacibo-zen .cg-wrap {
+  width: min(95vh, 97vw) !important;
+  height: min(95vh, 97vw) !important;
 }
 
-/* Board color override for anarcandy set.
-   Simple 2×2 tile SVG (no <use> refs - those break in data: URLs) tiled at 25%×25% */
+/* Board color override for anarcandy set (CSS gradient - no external resource) */
 body[data-piece-set="anarcandy"] cg-board {
-  background-color: #978971 !important;
-  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyIDIiIHNoYXBlLXJlbmRlcmluZz0iY3Jpc3BFZGdlcyI+PHJlY3Qgd2lkdGg9IjIiIGhlaWdodD0iMiIgZmlsbD0iIzk3ODk3MSIvPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiM1ZjRiM2EiLz48cmVjdCB4PSIxIiB5PSIxIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjNWY0YjNhIi8+PC9zdmc+") !important;
-  background-size: 25% 25% !important;
+  background-image: repeating-conic-gradient(#5f4b3a 0% 25%, #978971 0% 50%) !important;
+  background-size: 12.5% 12.5% !important;
 }
 
 /* Zen mode hint (bottom-left, fades out) */
@@ -105,9 +103,8 @@ body[data-piece-set="anarcandy"] cg-board {
     const desired = Math.min(window.innerHeight * 0.95, window.innerWidth * 0.97);
     const newZoom = (desired / BASE_BOARD_SIZE) * 100;
     document.body.style.setProperty("---zoom", newZoom.toFixed(2));
-    // Lichess sizes cg-container via ---cg-width/---cg-height, not ---zoom
-    document.body.style.setProperty("---cg-width", desired + "px");
-    document.body.style.setProperty("---cg-height", desired + "px");
+    // Note: cg-container size is handled directly via CSS (min(95vh, 97vw))
+    // so we don't touch ---cg-width/---cg-height to avoid clobbering Lichess's values
   }
 
   function setZen(active) {
@@ -116,8 +113,6 @@ body[data-piece-set="anarcandy"] cg-board {
       updateBoardSize();
     } else {
       document.body.style.removeProperty("---zoom");
-      document.body.style.removeProperty("---cg-width");
-      document.body.style.removeProperty("---cg-height");
     }
   }
 
