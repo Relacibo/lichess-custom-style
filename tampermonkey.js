@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Relacibos Lichess userscript
 // @namespace    Tampermonkey Scripts
-// @version      0.30
+// @version      0.31
 // @license MIT
 // @description  My custom lichess UX/UI enhancements
 // @author       Relacibo
