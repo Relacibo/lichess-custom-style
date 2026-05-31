@@ -202,6 +202,8 @@ body[data-piece-set="anarcandy"] cg-board {
   });
 
   function init() {
+    console.log("Loading Relacibos UX Enhancements");
+
     // Hide cg-resize handle
     const resize = document.querySelector("cg-resize");
     if (resize) resize.style.display = "none";
